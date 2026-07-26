@@ -10,7 +10,7 @@ st.title("🌊 DeepSeek AI Chat")
 st.caption("Sử dụng API chính thức của DeepSeek")
 
 # ====================== DÁN KEY DEEPSEEK CỦA BẠN VÀO ĐÂY ======================
-DEEPSEEK_API_KEY = "sk-60daa84b18e046ed97fbc73c332e2c53"   # ← Lấy key tại platform.deepseek.com
+DEEPSEEK_API_KEY = "sk-c28864db45d34a72854109fba31d63bb"   # ← Lấy key tại platform.deepseek.com
 
 MODEL = "deepseek-v4-flash"   # hoặc deepseek-v4-pro
 
