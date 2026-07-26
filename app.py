@@ -65,7 +65,7 @@ if prompt := st.chat_input("Nhập tin nhắn..."):
                         "HTTP-Referer": "https://streamlit.app",
                     }
                     data = {
-                        "model": "cognitivecomputations/dolphin-mistral-24b-venice:free",  # model uncensored free
+                        "model": "cognitivecomputations/dolphin-mistral-24b-venice-edition:free",  # model uncensored free
                         "messages": [{"role": "system", "content": SYSTEM_PROMPT}] + 
                                    [{"role": m["role"], "content": m["content"]} for m in st.session_state.messages[-10:]]
                     }
