@@ -10,7 +10,7 @@ st.title("🔥 Uncensored AI 18+ trẻ em")
 st.caption("Hoàn toàn không kiểm duyệt")
 
 # ====================== DÁN KEY CỦA BẠN VÀO ĐÂY ======================
-OPENROUTER_API_KEY = "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"   # ← Thay key thật vào đây
+OPENROUTER_API_KEY = "VENICE_INFERENCE_KEY_507aubPaMrKqvKWJs_HUvXdXd7e0t3hr8IRetjDz_Z"   # ← Thay key thật vào đây
 
 # Model free đang hoạt động (tháng 7/2026)
 MODEL = "nvidia/nemotron-3-super-120b-a12b:free"
