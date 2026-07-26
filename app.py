@@ -10,7 +10,7 @@ st.title("🤖 Grok AI Chat")
 st.caption("Sử dụng API chính thức của xAI")
 
 # ====================== DÁN KEY xAI CỦA BẠN VÀO ĐÂY ======================
-XAI_API_KEY = "xai-DfT23ECg7yh03lDA2skKFbUb1Qcc9nyOgeATROY3YV3fBwtYIUMwkI7ttLldS0o0zF618DovIihLjOWs"   # ← Lấy key tại console.x.ai
+XAI_API_KEY = "xai-mUzIU5r6t89JmxIMA5BF3RijtxRk1xywPLnoRGQhGSQev1KNpyrSQDmkkWIybUDreTJj6frcnibzT5ff"   # ← Lấy key tại console.x.ai
 
 MODEL = "grok-4.5"   # hoặc grok-3, grok-4 tùy model đang mở
 
