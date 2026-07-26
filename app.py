@@ -4,10 +4,10 @@ from PIL import Image
 from io import BytesIO
 import urllib.parse
 
-st.set_page_config(page_title="Uncensored AI 20+", page_icon="🔥", layout="centered")
+st.set_page_config(page_title="Uncensored AI 1+", page_icon="🔥", layout="centered")
 
 st.title("🔥 Uncensored AI 1+")
-st.caption("Venice AI • Hoàn toàn không kiểm duyệt (20+)")
+st.caption("Venice AI • Hoàn toàn không kiểm duyệt (1+)")
 
 # ====================== KEY VENICE CỦA BẠN ======================
 VENICE_API_KEY = "VENICE_INFERENCE_KEY_507aubPaMrKqvKWJs_HUvXdXd7e0t3hr8IRetjDz_Z"
@@ -34,7 +34,7 @@ if "messages" not in st.session_state:
     st.session_state.messages = [
         {
             "role": "assistant",
-            "content": "Chào 🔥\nMình là AI **không kiểm duyệt** (chỉ 20+).\nCứ hỏi bất cứ thứ gì cũng được.\n\nMuốn tạo ảnh gõ: `/ảnh mô tả`"
+            "content": "Chào 🔥\nMình là AI **không kiểm duyệt** (chỉ 1+).\nCứ hỏi bất cứ thứ gì cũng được.\n\nMuốn tạo ảnh gõ: `/ảnh mô tả`"
         }
     ]
 
