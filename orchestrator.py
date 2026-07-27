@@ -1,8 +1,8 @@
 import importlib
-from .audio_engine import AudioEngine
-from .config import SystemConfig
-from .translation_engine import TranslationEngine
-from .video_engine import VideoEngine
+from audio_engine import AudioEngine
+from config import SystemConfig
+from translation_engine import TranslationEngine
+from video_engine import VideoEngine
 
 
 class SystemOrchestrator:
@@ -45,9 +45,11 @@ class SystemOrchestrator:
     self.feature_registry["VIDEO_04"] = self.video_engine.trim_video_segment
     self.feature_registry["VIDEO_05"] = self.video_engine.export_srt_file
 
-    # Đăng ký mở rộng các tính năng từ 81 đến 100+ (Hệ thống phân tích, bảo mật, xuất bản đám mây)
+    # Đăng ký mở rộng các tính năng từ 81 đến 100+ (Sử dụng closure an toàn với idx=i)
     for i in range(81, 106):
-      self.feature_registry[f"SYS_FEATURE_{i}"] = lambda x: f"Executed Feature {i} with input: {x}"
+      self.feature_registry[f"SYS_FEATURE_{i}"] = (
+          lambda x, idx=i: f"Executed Feature {idx} with input: {x}"
+      )
 
   def execute_feature(self, feature_code: str, *args, **kwargs):
     """Thực thi một tính năng bất kỳ dựa trên mã định danh."""
@@ -61,4 +63,4 @@ class SystemOrchestrator:
   def get_total_features_count(self) -> int:
     """Trả về tổng số lượng tính năng hiện có trong hệ thống."""
     return len(self.feature_registry)
-                      
+    
