@@ -1,0 +1,7 @@
+streamlit
+moviepy==1.0.3
+transformers
+torch
+faster-whisper
+edge-tts
+asyncio
