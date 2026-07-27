@@ -1,6 +1,6 @@
 import streamlit as st
 from groq import Groq
-from duckduckgo_search import DDGS
+from import DDGS
 
 st.set_page_config(
     page_title="AI Groq trẻ em",
