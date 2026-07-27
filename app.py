@@ -69,7 +69,7 @@ if prompt := st.chat_input("Nhắn gì cũng được..."):
             
             try:
                 chat_completion = client.chat.completions.create(
-                    model="llama-3.3-70b-versatile",
+                    model="qwen/qwen3.6-27b",
                     messages=messages_payload,
                     temperature=0.85,
                     max_tokens=2048
