@@ -17,7 +17,7 @@ st.title("🎬 AI Lồng Tiếng + Dịch Phụ Đề (Bản Nhẹ)")
 st.caption("Phiên bản tối ưu cho Streamlit Cloud")
 
 # ================== CẤU HÌNH ==================
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+client = OpenAI(api_key=os.getenv("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"))
 
 VOICE_MAP = {
     "vi": "vi-VN-HoaiMyNeural",
