@@ -1,8 +1,1 @@
-streamlit>=1.32.0
-google-generativeai
-openai
-requests
-gtts
-edge-tts
-yt-dlp
-moviepy
+streamlit==1.35.0
