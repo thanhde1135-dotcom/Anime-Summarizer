@@ -1,0 +1,5 @@
+cau_hoi,cau_tra_loi
+xin chào,Chào bạn! Tôi đã đọc được dữ liệu từ file bên cạnh rồi đây.
+bạn tên gì,Tôi là con AI tự tạo, hoạt động dựa trên dữ liệu bạn nhập trong file data.csv.
+quy định là gì,Không dùng API, tự quản lý câu hỏi và câu trả lời thông qua file CSV.
+hôm nay thế nào,Mọi thứ vẫn hoạt động theo đúng các quy tắc bạn đã cài đặt.
