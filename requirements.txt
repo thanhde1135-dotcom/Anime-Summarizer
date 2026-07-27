@@ -1,8 +1,0 @@
-streamlit
-openai
-edge-tts
-pydub
-ffmpeg-python
-numpy
-python-dotenv
-deep-translator
