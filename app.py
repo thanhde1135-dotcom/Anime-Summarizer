@@ -2,19 +2,20 @@ import streamlit as st
 import difflib
 from database import load_all_knowledge, save_knowledge
 from scraper import crawl_website
-from smart_search import find_best_answer_ai  # Gọi mô đun tìm kiếm thông minh
-from exporter import generate_report          # Gọi mô đun xuất báo cáo
+from smart_search import find_best_answer_ai
+from exporter import generate_report
+from image_downloader import get_images_as_zip  # Gọi mô đun tải ảnh mới
 
 st.set_page_config(page_title="Hệ Thống Trợ Lý AI Chuyên Nghiệp", page_icon="💼", layout="wide")
 
-st.title("💼 Hệ Thống Trợ Lý AI & Quản Trị Tri Thức Đa Mô Đun")
-st.markdown("Hệ thống tích hợp AI tìm kiếm ngữ nghĩa thông minh, tự động cào web và xuất báo cáo dữ liệu.")
+st.title("💼 Hệ Thống Trợ Lý AI, Cào Web & Tải Ảnh Đa Mô Đun")
+st.markdown("Hệ thống tích hợp: Trợ lý AI thông minh, cào web tự động, xuất báo cáo và trình tải ảnh hàng loạt.")
 
 knowledge_base = load_all_knowledge()
 
 with st.sidebar:
     st.header("⚙️ Bảng Điều Khiển")
-    tab_menu = st.radio("Chọn chức năng:", ["🤖 Cào Web & Xuất Báo Cáo", "📚 Quản Lý Tri Thức"])
+    tab_menu = st.radio("Chọn chức năng:", ["🤖 Cào Web & Xuất Báo Cáo", "🖼️ Tải Ảnh Hàng Loạt", "📚 Quản Lý Tri Thức"])
     
     if tab_menu == "🤖 Cào Web & Xuất Báo Cáo":
         st.subheader("🌐 Cào Web Tự Động")
@@ -34,7 +35,6 @@ with st.sidebar:
             else:
                 st.error("Vui lòng nhập link hợp lệ!")
                 
-        # Tính năng xuất báo cáo cực hay
         if st.session_state.get('crawled_urls'):
             st.markdown("---")
             st.subheader("📥 Xuất Báo Cáo")
@@ -44,6 +44,31 @@ with st.sidebar:
                 data=report_content,
                 file_name="bao_cao_ai_crawled.md",
                 mime="text/markdown"
+            )
+
+    elif tab_menu == "🖼️ Tải Ảnh Hàng Loạt":
+        st.subheader("🖼️ Trình Tải Ảnh Từ Link")
+        img_url_input = st.text_input("Dán link trang web chứa ảnh:")
+        
+        if st.button("🔍 Quét & Tải Ảnh"):
+            if img_url_input:
+                with st.spinner("Đang quét và gom toàn bộ ảnh vào file ZIP..."):
+                    zip_file, msg = get_images_as_zip(img_url_input)
+                    if zip_file:
+                        st.success(msg)
+                        st.session_state.zip_data = zip_file
+                    else:
+                        st.error(msg)
+            else:
+                st.error("Vui lòng nhập link hợp lệ!")
+                
+        # Hiển thị nút tải file ZIP nếu có dữ liệu
+        if st.session_state.get('zip_data'):
+            st.download_button(
+                label="📦 Tải xuống File ZIP chứa toàn bộ ảnh",
+                data=st.session_state.zip_data,
+                file_name="downloaded_images.zip",
+                mime="application/zip"
             )
 
     else:
@@ -83,17 +108,14 @@ if user_prompt := st.chat_input("Hỏi bé bất kỳ thông tin gì từ các t
         bot_reply = f"✅ Hệ thống đã ghi nhớ vĩnh viễn: *'{pending_q}' -> '{user_prompt}'*."
         st.session_state.learning_question = None
     else:
-        # 1. TÌM KIẾM THÔNG MINH BẰNG MÔ ĐUN smart_search.py
         web_data = st.session_state.get("web_text", "")
         if web_data and any(kw in user_text_lower for kw in ["tóm tắt", "tất cả", "nội dung chính"]):
-            bot_reply = f"Dạ, hệ thống đã cào từ {len(st.session_state.get('crawled_urls', []))} trang web. Anh/chị có thể tải báo cáo về hoặc hỏi chi tiết vấn đề cụ thể!"
+            bot_reply = f"Dạ, hệ thống đã cào từ {len(st.session_state.get('crawled_urls', []))} trang web. Anh/chị có thể hỏi chi tiết hoặc qua tab tải ảnh!"
         elif web_data:
-            # Gọi thuật toán vector thông minh
             best_match = find_best_answer_ai(user_prompt, web_data)
             if best_match:
                 bot_reply = f"🧠 **AI Phân Tích Thông Minh từ Web:**\n\n> *{best_match}*"
 
-        # 2. Tra cứu kho cơ sở dữ liệu CSV
         if not bot_reply:
             if user_text_lower in knowledge_base:
                 bot_reply = knowledge_base[user_text_lower]
@@ -102,7 +124,6 @@ if user_prompt := st.chat_input("Hỏi bé bất kỳ thông tin gì từ các t
                 if matches:
                     bot_reply = knowledge_base[matches[0]]
 
-        # 3. Kích hoạt học tập
         if not bot_reply:
             st.session_state.learning_question = user_text_lower
             bot_reply = f"🤔 Hệ thống chưa tìm thấy thông tin cho câu hỏi **'{user_prompt}'**. Mời anh/chị dạy đáp án để hệ thống tự học!"
@@ -110,4 +131,4 @@ if user_prompt := st.chat_input("Hỏi bé bất kỳ thông tin gì từ các t
     st.session_state.chat_history.append({"role": "assistant", "content": bot_reply})
     with st.chat_message("assistant"):
         st.markdown(bot_reply)
-        
+                                
