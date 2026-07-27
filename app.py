@@ -3,15 +3,15 @@ import csv
 import os
 import random
 import difflib
-import requests
+import cloudscraper  # Thư viện vượt tường lửa chống chặn
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
 import re
 
-st.set_page_config(page_title="AI Cào Link Thông Minh", page_icon="🔍", layout="centered")
+st.set_page_config(page_title="AI Vượt Tường Lửa Cào Web", page_icon="🛡️", layout="centered")
 
-st.title("🔍 Trợ Lý AI Cào Link (Đã Sửa Lỗi Chặn)")
-st.markdown("Hệ thống giả lập trình duyệt thật để vượt qua các trang web thông thường. Nếu trang web chặn, bé sẽ báo lỗi chi tiết cho bạn.")
+st.title("🛡️ Trợ Lý AI Vượt Tường Lửa & Tiếp Thu Thông Tin")
+st.markdown("Hệ thống tích hợp công cụ vượt tường chống chặn và cổng nạp dữ liệu trực tiếp giúp bé tiếp thu mọi tài liệu!")
 
 DATA_FILE = "data.csv"
 
@@ -19,7 +19,7 @@ if not os.path.exists(DATA_FILE):
     with open(DATA_FILE, mode="w", encoding="utf-8", newline="") as file:
         writer = csv.writer(file)
         writer.writerow(["cau_hoi", "cau_tra_loi"])
-        writer.writerow(["xin chào", "Dạ con chào anh/chị! Con đã sẵn sàng cào link rồi đây! 🔍"])
+        writer.writerow(["xin chào", "Dạ con chào anh/chị! Con đã sẵn sàng vượt tường lửa và nạp kiến thức rồi đây! 🛡️"])
 
 def load_knowledge_base():
     knowledge = {}
@@ -55,12 +55,12 @@ if "error_log" not in st.session_state:
     st.session_state.error_log = ""
 
 with st.sidebar:
-    st.subheader("⚙️ Điều Kiện Cào Link")
-    url_input = st.text_input("Dán link gốc ban đầu:", value="")
+    st.subheader("🛡️ Vượt Tường Lửa Web")
+    url_input = st.text_input("Dán link trang web cần vượt rào:")
     
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("🚀 Bắt đầu cào"):
+        if st.button("🚀 Vượt rào cào"):
             if url_input:
                 st.session_state.is_crawling = True
                 st.session_state.to_visit = [url_input]
@@ -73,40 +73,43 @@ with st.sidebar:
                 st.warning("Vui lòng nhập link!")
                 
     with col2:
-        if st.button("⏹️ Ngừng lại"):
+        if st.button("⏹️ Dừng lại"):
             st.session_state.is_crawling = False
             st.rerun()
 
     st.markdown("---")
+    st.subheader("⚡ Cổng Phụ Nạp Nhanh (Dự Phòng)")
+    st.markdown("Nếu trang web bắt đăng nhập hoặc chặn hoàn toàn, hãy copy nội dung dán vào đây:")
+    direct_text_input = st.text_area("Dán nội dung văn bản/tài liệu vào đây:")
+    if st.button("📥 Cho bé nạp ngay văn bản"):
+        if direct_text_input:
+            st.session_state.multi_web_text += "\n--- DỮ LIỆU NẠP THỦ CÔNG ---\n" + direct_text_input
+            st.success("Đã nạp thành công toàn bộ văn bản vào bộ nhớ của bé!")
+        else:
+            st.warning("Chưa có nội dung để nạp!")
+
+    st.markdown("---")
     st.subheader("📊 Trạng Thái")
     if st.session_state.is_crawling:
-        st.info("🔄 Đang quét link...")
+        st.info("🔄 Đang vượt tường lửa cào dữ liệu...")
     else:
-        st.warning("⏸️ Đã dừng hoặc hoàn tất.")
+        st.warning("⏸️ Đang dừng hoặc hoàn tất.")
         
-    st.write(f"Đã quét qua: **{len(st.session_state.crawled_urls)}** đường link.")
+    st.write(f"Số link/nguồn đã nạp: **{len(st.session_state.crawled_urls) + (1 if 'DỮ LIỆU NẠP THỦ CÔNG' in st.session_state.multi_web_text else 0)}**")
     
     if st.session_state.error_log:
-        st.error(f"⚠️ Thông báo lỗi:\n{st.session_state.error_log}")
+        st.error(f"⚠️ {st.session_state.error_log}")
 
-    if st.session_state.crawled_urls:
-        with st.expander("Xem các link đã cào"):
-            for u in st.session_state.crawled_urls:
-                st.write(f"- {u}")
-
-# LOGIC CÀO LINK VỚI HEADER GIẢ LẬP TRÌNH DUYỆT THẬT & BÁO LÕI RÕ RÀNG
+# LOGIC VƯỢT TƯỜNG LỬA BẰNG CLOUDSCRAPER
 if st.session_state.is_crawling:
     if st.session_state.to_visit:
         current_url = st.session_state.to_visit.pop(0)
         if current_url not in st.session_state.visited:
             st.session_state.visited.add(current_url)
             try:
-                # Giả lập trình duyệt Chrome để giảm thiểu việc bị chặn
-                headers = {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                    'Accept-Language': 'vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7',
-                }
-                res = requests.get(current_url, headers=headers, timeout=8)
+                # Sử dụng cloudscraper để vượt qua tường lửa bảo mật
+                scraper = cloudscraper.create_scraper()
+                res = scraper.get(current_url, timeout=10)
                 
                 if res.status_code == 200:
                     st.session_state.crawled_urls.append(current_url)
@@ -126,16 +129,16 @@ if st.session_state.is_crawling:
                             if clean_url not in st.session_state.visited and clean_url not in st.session_state.to_visit:
                                 st.session_state.to_visit.append(clean_url)
                 else:
-                    st.session_state.error_log = f"Trang từ chối truy cập (Mã lỗi {res.status_code}) tại: {current_url}"
+                    st.session_state.error_log = f"Trang từ chối (Mã {res.status_code}). Hãy dùng cổng phụ bên dưới để dán nội dung trực tiếp!"
                     st.session_state.is_crawling = False
             except Exception as e:
-                st.session_state.error_log = f"Lỗi kết nối: {str(e)}"
+                st.session_state.error_log = f"Không vượt rào được: {str(e)}. Hãy dùng cổng phụ dán text trực tiếp."
                 st.session_state.is_crawling = False
         
         st.rerun()
     else:
         st.session_state.is_crawling = False
-        st.success("Đã cào hoàn tất tất cả các đường link hợp lệ!")
+        st.success("Đã vượt rào và cào hoàn tất các trang!")
         st.rerun()
 
 # Khung chat giao tiếp
@@ -148,7 +151,7 @@ for chat in st.session_state.chat_history:
     with st.chat_message(chat["role"]):
         st.markdown(chat["content"])
 
-if user_prompt := st.chat_input("Hỏi bé thông tin từ các đường link đã cào..."):
+if user_prompt := st.chat_input("Hỏi bé về kiến thức đã nạp hoặc trò chuyện..."):
     st.session_state.chat_history.append({"role": "user", "content": user_prompt})
     with st.chat_message("user"):
         st.markdown(user_prompt)
@@ -164,13 +167,13 @@ if user_prompt := st.chat_input("Hỏi bé thông tin từ các đường link �
         st.session_state.learning_question = None
     else:
         if st.session_state.multi_web_text and any(kw in user_text_lower for kw in ["tóm tắt", "tất cả các trang", "nội dung chính"]):
-            bot_reply = f"Dạ, con đã cào thành công tổng cộng {len(st.session_state.crawled_urls)} đường link! Anh/chị muốn tìm thông tin chi tiết nào cứ hỏi con nhé!"
+            bot_reply = f"Dạ, con đã tiếp thu thông tin từ các nguồn dữ liệu anh/chị cung cấp! Anh/chị muốn hỏi chi tiết phần nào cứ nói con nhé!"
         elif st.session_state.multi_web_text:
             sentences = re.split(r'[.!?]+', st.session_state.multi_web_text)
             matched = [s.strip() for s in sentences if any(w in s.lower() for w in user_text_lower.split() if len(w) > 2)]
             if matched:
                 best_answers = ". ".join(matched[:3])
-                bot_reply = f"Dạ, con tìm thấy đoạn này trong các link đã cào:\n\n> *{best_answers}.* 🔍"
+                bot_reply = f"Dạ, con tìm thấy thông tin này trong tài liệu đã nạp:\n\n> *{best_answers}.* 🔍"
 
         if not bot_reply:
             if user_text_lower in knowledge_base:
@@ -182,9 +185,9 @@ if user_prompt := st.chat_input("Hỏi bé thông tin từ các đường link �
 
         if not bot_reply:
             st.session_state.learning_question = user_text_lower
-            bot_reply = f"Hì hì, câu **'{user_prompt}'** này con chưa tìm thấy trong các link đã cào! Anh/chị dạy con câu trả lời nha? 🥺"
+            bot_reply = f"Hì hì, câu **'{user_prompt}'** này con chưa thấy trong tài liệu đã nạp! Anh/chị dạy con câu trả lời nha? 🥺"
 
     st.session_state.chat_history.append({"role": "assistant", "content": bot_reply})
     with st.chat_message("assistant"):
         st.markdown(bot_reply)
-                        
+                    
