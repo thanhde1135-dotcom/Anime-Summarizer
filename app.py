@@ -1,57 +1,45 @@
 import streamlit as st
-import google.generativeai as genai
 
-# Cấu hình giao diện Streamlit
-st.set_page_config(page_title="AI Tuân Thủ Quy Tắc", page_icon="🤖")
-st.title("🤖 Trợ Lý AI Riêng Tư")
-st.write("Ứng dụng AI hoạt động hoàn toàn dựa trên các quy tắc do bạn thiết lập.")
+st.set_page_config(page_title="Con AI Tự Tạo Của Tôi", page_icon="🧠")
+st.title("🧠 Con AI Của Riêng Bạn (Không Dùng API)")
+st.write("Đây là một con AI dạng tờ giấy trắng. Mọi câu trả lời dưới đây đều do chính bạn quy định trong mã nguồn.")
 
-# Nhập API Key (Khuyến nghị dùng Streamlit Secrets sau khi đã quen)
-api_key = st.text_input("Nhập Google Gemini API Key của bạn:", type="password")
+# Khởi tạo lịch sử trò chuyện trên giao diện
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
-if api_key:
-    genai.configure(api_key=api_key)
-    
+# Hiển thị lịch sử chat cũ
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
+
+# Khung nhập tin nhắn của người dùng
+if user_input := st.chat_input("Nhập tin nhắn cho con AI của bạn..."):
+    # Lưu tin nhắn người dùng
+    st.session_state.messages.append({"role": "user", "content": user_input})
+    with st.chat_message("user"):
+        st.markdown(user_input)
+
     # =========================================================================
-    # NƠI BẠN TỰ ĐẶT QUY TẮC CHO AI (SYSTEM PROMPT)
-    # Bạn có thể thay đổi nội dung bên trong dấu ngoặc kép để dạy AI quy tắc mới.
+    # NƠI BẠN TỰ DẶT QUY TẮC VÀ DẠY CON AI NÀY (HỆ THỐNG LUẬT LỆ)
+    # Bạn có thể tự thêm các nhánh `elif` để dạy nó nói những câu khác.
     # =========================================================================
-    QUY_TAC_HE_THONG = """
-    Bạn là một trợ lý AI được lập trình riêng. Bạn phải tuân thủ nghiêm ngặt các quy tắc sau:
-    1. TUYỆT ĐỐI KHÔNG tự ý tra cứu hay tìm kiếm thông tin trên internet.
-    2. Chỉ trả lời dựa trên nội dung được cung cấp hoặc kiến thức có sẵn từ trước.
-    3. Nếu gặp câu hỏi nằm ngoài phạm vi hoặc không biết câu trả lời, hãy từ chối lịch sự bằng câu: "Theo quy định, tôi không có thông tin hoặc không được phép trả lời câu hỏi này."
-    4. Giữ câu trả lời ngắn gọn, rõ ràng và đúng trọng tâm.
-    """
+    text_lower = user_input.lower()
     
-    # Khởi tạo mô hình AI kèm theo quy tắc hệ thống
-    model = genai.GenerativeModel(
-        model_name="gemini-1.5-flash",
-        system_instruction=QUY_TAC_HE_THONG
-    )
+    # Quy tắc 1: Khi người dùng chào hỏi
+    if "xin chào" in text_lower or "hi" in text_lower:
+        bot_response = "Chào bạn! Tôi là con AI do chính bạn tạo ra. Tôi chưa có bộ não thông minh nhân tạo nào cả, tôi chỉ phản ứng theo quy tắc bạn viết."
     
-    # Khởi tạo lịch sử trò chuyện
-    if "chat" not in st.session_state:
-        st.session_state.chat = model.start_chat(history=[])
+    # Quy tắc 2: Khi người dùng hỏi tên nó
+    elif "tên bạn là gì" in text_lower or "bạn là ai" in text_lower:
+        bot_response = "Tôi chưa có tên. Bạn hãy sửa code trong GitHub để đặt tên cho tôi nhé!"
+    
+    # Quy tắc 3: Khi người dùng hỏi điều gì đó mà bạn chưa dạy
+    else:
+        bot_response = "Quy định của tôi: Tôi là AI tự chế nên tôi không biết điều này. (Hãy vào code để dạy tôi câu trả lời cho tình huống này)."
 
-    # Hiển thị lịch sử tin nhắn trên giao diện
-    for message in st.session_state.chat.history:
-        role_mapped = "user" if message.role == "user" else "assistant"
-        with st.chat_message(role_mapped):
-            st.markdown(message.parts[0].text)
-
-    # Khung nhập tin nhắn cho người dùng
-    if user_input := st.chat_input("Nhập tin nhắn của bạn..."):
-        with st.chat_message("user"):
-            st.markdown(user_input)
+    # Lưu và hiển thị câu trả lời của AI
+    st.session_state.messages.append({"role": "assistant", "content": bot_response})
+    with st.chat_message("assistant"):
+        st.markdown(bot_response)
         
-        with st.chat_message("assistant"):
-            with st.spinner("AI đang xử lý theo quy tắc..."):
-                try:
-                    response = st.session_state.chat.send_message(user_input)
-                    st.markdown(response.text)
-                except Exception as e:
-                    st.error(f"Đã xảy ra lỗi: {e}")
-else:
-    st.info("Vui lòng nhập API Key để kích hoạt ứng dụng AI của bạn.")
-              
