@@ -1,0 +1,16 @@
+streamlit
+faster-whisper
+whisperx
+torch
+torchaudio
+edge-tts
+openai
+python-dotenv
+ffmpeg-python
+pydub
+numpy
+soundfile
+librosa
+deep-translator
+httpx
+aiofiles
