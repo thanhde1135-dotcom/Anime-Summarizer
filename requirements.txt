@@ -1,5 +1,3 @@
-streamlit
-google-generativeai
-groq
-edge-tts
-asyncio
+streamlit==1.38.0
+groq==0.11.0
+requests==2.31.0
