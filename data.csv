@@ -1,5 +1,5 @@
 cau_hoi,cau_tra_loi
-xin chào,Chào bạn! Tôi đã đọc được dữ liệu từ file bên cạnh rồi đây.
-bạn tên gì,Tôi là con AI tự tạo, hoạt động dựa trên dữ liệu bạn nhập trong file data.csv.
-quy định là gì,Không dùng API, tự quản lý câu hỏi và câu trả lời thông qua file CSV.
-hôm nay thế nào,Mọi thứ vẫn hoạt động theo đúng các quy tắc bạn đã cài đặt.
+xin chào,Chào sếp! Tôi đã sẵn sàng nhận lệnh từ bạn.
+bạn là ai,Tôi là một thực thể AI tự tạo, không phụ thuộc vào bất kỳ dịch vụ hay API nào bên ngoài.
+quy tắc hoạt động,Không dùng API, chỉ phản hồi dựa trên dữ liệu chuẩn xác được định nghĩa sẵn trong hệ thống nội bộ.
+hôm nay thế nào,Mọi hệ thống hoạt động ổn định và tuân thủ nghiêm ngặt các quy tắc bạn đã đặt ra.
