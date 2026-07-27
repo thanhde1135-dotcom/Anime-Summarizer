@@ -1,9 +1,11 @@
 streamlit
+torch
+torchaudio
 faster-whisper
 edge-tts
 openai
 python-dotenv
 pydub
 ffmpeg-python
-deep-translator
 numpy
+deep-translator
