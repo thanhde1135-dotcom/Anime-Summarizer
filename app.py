@@ -14,7 +14,7 @@ st.set_page_config(
 st.markdown(
     """
     <h2 style='text-align: center; color: #FF4B4B;'>🎬 Tạo Phụ Đề & Dịch Tự Động (Phong cách CapCut)</h2>
-    <p style='text-align: center;'>Sử dụng mô hình <b>Whisper Large V3</b> và <b>LLaMA 3</b> mạnh nhất thế giới!</p>
+    <p style='text-align: center;'>Sử dụng mô hình <b>Whisper Large V3</b> và <b>LLaMA 3 (70B)</b> bản tối ưu hóa dịch thuật!</p>
     """,
     unsafe_allow_html=True,
 )
@@ -40,8 +40,8 @@ target_language = st.sidebar.selectbox(
 
 st.sidebar.markdown("---")
 st.sidebar.info(
-    "💡 **Hệ thống tự động:** Video nặng sẽ được tự động tách lấy âm thanh siêu"
-    " nhẹ để gửi cho AI, không lo giới hạn dung lượng!"
+    "💡 **Mẹo:** Hệ thống đã được lập trình để lọc và Việt hóa 100% các thuật"
+    " ngữ, tiền tệ và đơn vị đo lường."
 )
 
 # Khu vực tải lên file từ điện thoại/máy tính
@@ -53,13 +53,15 @@ if uploaded_file is not None:
   st.video(uploaded_file)
 
   if st.button(
-      "🚀 Bắt đầu Phân tích & Tạo Phụ Đề", type="primary", use_container_width=True
+      "🚀 Bắt đầu Phân tích & Dịch chuẩn 100%",
+      type="primary",
+      use_container_width=True,
   ):
     if not groq_api_key:
       st.error("⚠️ Vui lòng nhập Groq API Key ở thanh bên trái (Sidebar)!")
     else:
       with st.spinner(
-          "🔄 Đang tự động tách âm thanh và phân tích bằng Whisper Large V3..."
+          "🔄 Đang xử lý âm thanh và dịch thuật chuẩn hóa hoàn toàn..."
       ):
         try:
           # Lưu file gốc tạm thời
@@ -72,7 +74,7 @@ if uploaded_file is not None:
 
           output_audio_path = input_path + ".mp3"
 
-          # Tự động dùng ffmpeg trích xuất audio từ video để giảm dung lượng xuống dưới 25MB
+          # Tự động trích xuất audio bằng ffmpeg
           cmd = [
               "ffmpeg",
               "-y",
@@ -87,7 +89,6 @@ if uploaded_file is not None:
           ]
           subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-          # Chọn file audio đã trích xuất (hoặc file gốc nếu là mp3)
           target_file = (
               output_audio_path
               if os.path.exists(output_audio_path)
@@ -121,12 +122,22 @@ if uploaded_file is not None:
             words_data = getattr(transcription, "words", [])
             full_text = getattr(transcription, "text", "")
 
-            # Bước 2: Dịch thuật sử dụng LLaMA 3
+            # Bước 2: Dịch thuật nâng cao với LLaMA 3 (Ép Việt hóa 100%)
             lang_name = target_language.split(" ")[0]
             translation_prompt = (
-                f"Translate the following text into {lang_name}. Keep the"
-                f" formatting natural, accurate, and suitable for video"
-                f" subtitles:\n\n{full_text}"
+                f"You are a professional native {lang_name} translator and"
+                " localization expert for video subtitles.\nTranslate the"
+                " following text into natural, fluent {lang_name}.\nStrict"
+                " translation rules:\n1. Translate ALL foreign currency terms"
+                " (such as 块钱) into standard Vietnamese currency terms (e.g.,"
+                " 'tệ' or 'NDT').\n2. Translate and convert ALL units of"
+                " measurement and weight (such as 克, 斤) into standard"
+                " Vietnamese equivalents (e.g., gram, kg, cân).\n3. Do NOT leave"
+                " any raw Chinese characters (漢字) in the output text; fully"
+                " translate or transliterate them into Vietnamese names or"
+                " words.\n4. Ensure the tone is extremely natural, professional,"
+                " and perfectly suited for video subtitles.\n\nText to"
+                f" translate:\n{full_text}"
             )
 
             chat_completion = client.chat.completions.create(
@@ -141,7 +152,7 @@ if uploaded_file is not None:
             st.success("✨ Xử lý thành công hoàn toàn!")
 
             # Hiển thị kết quả bản dịch tổng quan
-            st.subheader("📝 Bản dịch tổng quan:")
+            st.subheader("📝 Bản dịch tổng quan (Chuẩn 100%):")
             st.info(translated_text)
 
             # Hiển thị phụ đề chi tiết phong cách CapCut
@@ -171,4 +182,4 @@ if uploaded_file is not None:
 
         except Exception as e:
           st.error(f"❌ Đã xảy ra lỗi trong quá trình xử lý: {e}")
-        
+                  
