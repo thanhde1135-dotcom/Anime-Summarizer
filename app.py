@@ -8,10 +8,10 @@ from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
 import re
 
-st.set_page_config(page_title="AI Cào Tất Cả Mọi Link", page_icon="🌐", layout="centered")
+st.set_page_config(page_title="AI Cào Link Thông Minh", page_icon="🔍", layout="centered")
 
-st.title("🌐 Trợ Lý AI Cào Mọi Đường Link (Không Giới Hạn)")
-st.markdown("Hệ thống sẽ liên tục quét từng trang và đi theo **tất cả các đường link** tìm thấy từ bất kỳ trang nào cho đến khi bạn bấm nút **Ngừng lại**.")
+st.title("🔍 Trợ Lý AI Cào Link (Đã Sửa Lỗi Chặn)")
+st.markdown("Hệ thống giả lập trình duyệt thật để vượt qua các trang web thông thường. Nếu trang web chặn, bé sẽ báo lỗi chi tiết cho bạn.")
 
 DATA_FILE = "data.csv"
 
@@ -19,7 +19,7 @@ if not os.path.exists(DATA_FILE):
     with open(DATA_FILE, mode="w", encoding="utf-8", newline="") as file:
         writer = csv.writer(file)
         writer.writerow(["cau_hoi", "cau_tra_loi"])
-        writer.writerow(["xin chào", "Dạ con chào anh/chị! Con đã sẵn sàng cào mọi đường link theo yêu cầu! 🌐"])
+        writer.writerow(["xin chào", "Dạ con chào anh/chị! Con đã sẵn sàng cào link rồi đây! 🔍"])
 
 def load_knowledge_base():
     knowledge = {}
@@ -51,9 +51,11 @@ if "to_visit" not in st.session_state:
     st.session_state.to_visit = []
 if "visited" not in st.session_state:
     st.session_state.visited = set()
+if "error_log" not in st.session_state:
+    st.session_state.error_log = ""
 
 with st.sidebar:
-    st.subheader("⚙️ Điều Kiện Cào Mọi Link")
+    st.subheader("⚙️ Điều Kiện Cào Link")
     url_input = st.text_input("Dán link gốc ban đầu:", value="")
     
     col1, col2 = st.columns(2)
@@ -65,6 +67,7 @@ with st.sidebar:
                 st.session_state.visited = set()
                 st.session_state.multi_web_text = ""
                 st.session_state.crawled_urls = []
+                st.session_state.error_log = ""
                 st.rerun()
             else:
                 st.warning("Vui lòng nhập link!")
@@ -77,25 +80,34 @@ with st.sidebar:
     st.markdown("---")
     st.subheader("📊 Trạng Thái")
     if st.session_state.is_crawling:
-        st.info("🔄 Đang cào toàn bộ các link liên tục...")
+        st.info("🔄 Đang quét link...")
     else:
         st.warning("⏸️ Đã dừng hoặc hoàn tất.")
         
     st.write(f"Đã quét qua: **{len(st.session_state.crawled_urls)}** đường link.")
+    
+    if st.session_state.error_log:
+        st.error(f"⚠️ Thông báo lỗi:\n{st.session_state.error_log}")
+
     if st.session_state.crawled_urls:
         with st.expander("Xem các link đã cào"):
             for u in st.session_state.crawled_urls:
                 st.write(f"- {u}")
 
-# LOGIC CÀO TẤT CẢ CÁC LINK KHÔNG GIỚI HẠN TÊN MIỀN
+# LOGIC CÀO LINK VỚI HEADER GIẢ LẬP TRÌNH DUYỆT THẬT & BÁO LÕI RÕ RÀNG
 if st.session_state.is_crawling:
     if st.session_state.to_visit:
         current_url = st.session_state.to_visit.pop(0)
         if current_url not in st.session_state.visited:
             st.session_state.visited.add(current_url)
             try:
-                headers = {'User-Agent': 'Mozilla/5.0'}
-                res = requests.get(current_url, headers=headers, timeout=5)
+                # Giả lập trình duyệt Chrome để giảm thiểu việc bị chặn
+                headers = {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'Accept-Language': 'vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7',
+                }
+                res = requests.get(current_url, headers=headers, timeout=8)
+                
                 if res.status_code == 200:
                     st.session_state.crawled_urls.append(current_url)
                     soup = BeautifulSoup(res.text, 'html.parser')
@@ -106,7 +118,6 @@ if st.session_state.is_crawling:
                     page_text = soup.get_text(separator=' ', strip=True)
                     st.session_state.multi_web_text += f"\n--- LINK: {current_url} ---\n" + page_text
                     
-                    # Cào TẤT CẢ CÁC LINK tìm thấy (bất kể tên miền nào, miễn là hợp lệ http/https)
                     for link in soup.find_all('a', href=True):
                         abs_url = urljoin(current_url, link['href'])
                         parsed = urlparse(abs_url)
@@ -114,13 +125,17 @@ if st.session_state.is_crawling:
                             clean_url = abs_url.split('#')[0]
                             if clean_url not in st.session_state.visited and clean_url not in st.session_state.to_visit:
                                 st.session_state.to_visit.append(clean_url)
-            except Exception:
-                pass
+                else:
+                    st.session_state.error_log = f"Trang từ chối truy cập (Mã lỗi {res.status_code}) tại: {current_url}"
+                    st.session_state.is_crawling = False
+            except Exception as e:
+                st.session_state.error_log = f"Lỗi kết nối: {str(e)}"
+                st.session_state.is_crawling = False
         
         st.rerun()
     else:
         st.session_state.is_crawling = False
-        st.success("Đã cào hoàn tất tất cả các đường link có thể tiếp cận!")
+        st.success("Đã cào hoàn tất tất cả các đường link hợp lệ!")
         st.rerun()
 
 # Khung chat giao tiếp
