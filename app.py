@@ -2,138 +2,74 @@ import streamlit as st
 import csv
 import os
 
-st.set_page_config(page_title="AI Đọc Dữ Liệu Từ File", page_icon="📚")
-st.title("📚 Con AI Đọc Dữ Liệu Từ Tệp Riêng")
-st.write("Con AI này không dùng API, nó tự động tra cứu các câu trả lời từ file `data.csv` nằm bên cạnh.")
+# Cấu hình trang
+st.set_page_config(page_title="AI Độc Lập Nội Bộ", page_icon="⚙️", layout="centered")
 
-# Tên file chứa dữ liệu
+st.title("⚙️ Hệ Thống AI Độc Lập Không API")
+st.markdown("Con AI này hoạt động như một tờ giấy trắng, phản hồi hoàn toàn dựa trên dữ liệu bạn nạp vào file `data.csv`.")
+
 DATA_FILE = "data.csv"
 
-# Hàm đọc dữ liệu từ file CSV
-def load_qa_data():
-    qa_dict = {}
+# Hàm đọc dữ liệu từ tệp CSV
+def load_knowledge_base():
+    knowledge = {}
     if os.path.exists(DATA_FILE):
-        with open(DATA_FILE, mode="r", encoding="utf-8") as f:
-            reader = csv.reader(f)
-            next(reader, None)  # Bỏ qua dòng tiêu đề (cau_hoi, cau_tra_loi)
+        with open(DATA_FILE, mode="r", encoding="utf-8") as file:
+            reader = csv.reader(file)
+            next(reader, None)  # Bỏ qua tiêu đề
             for row in reader:
                 if len(row) >= 2:
-                    question = row[0].strip().lower()
-                    answer = row[1].strip()
-                    qa_dict[question] = answer
-    return qa_dict
+                    q = row[0].strip().lower()
+                    a = row[1].strip()
+                    knowledge[q] = a
+    return knowledge
 
-# Tải dữ liệu câu hỏi/trả lời
-qa_data = load_qa_data()
+# Tải dữ liệu
+knowledge_base = load_knowledge_base()
 
-# Hiển thị bảng danh sách những gì AI đang biết (để bạn dễ theo dõi)
-with st.expander("📂 Xem danh sách câu hỏi/trả lời hiện có trong file `data.csv`"):
-    if qa_data:
-        for q, a in qa_data.items():
-            st.write(f"- **Hỏi:** `{q}` ➔ **Đáp:** `{a}`")
+# Hiển thị bảng kiến thức hiện tại ở thanh bên (Sidebar)
+with st.sidebar:
+    st.subheader("📚 Kho Dữ Liệu Của AI")
+    st.write(f"Tổng số quy tắc đã học: **{len(knowledge_base)}**")
+    st.markdown("---")
+    if knowledge_base:
+        for q, a in knowledge_base.items():
+            st.markdown(f"- **Hỏi:** `{q}`")
     else:
-        st.write("File `data.csv` chưa có dữ liệu hoặc đang trống.")
+        st.warning("Chưa có dữ liệu trong file `data.csv`.")
 
-# Khởi tạo lịch sử trò chuyện trên giao diện
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+# Khởi tạo trạng thái hội thoại
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
 
-# Hiển thị lịch sử chat
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+# Vẽ lại lịch sử chat trên giao diện
+for chat in st.session_state.chat_history:
+    with st.chat_message(chat["role"]):
+        st.markdown(chat["content"])
 
-# Khung nhập tin nhắn
-if user_input := st.chat_input("Nhập câu hỏi cho con AI của bạn..."):
-    # Lưu tin nhắn của bạn
-    st.session_state.messages.append({"role": "user", "content": user_input})
+# Khu vực nhập liệu trò chuyện
+if user_prompt := st.chat_input("Nhập yêu cầu hoặc câu hỏi..."):
+    # Lưu tin nhắn người dùng
+    st.session_state.chat_history.append({"role": "user", "content": user_prompt})
     with st.chat_message("user"):
-        st.markdown(user_input)
+        st.markdown(user_prompt)
 
-    user_text_lower = user_input.strip().lower()
-    
-    # Tìm kiếm câu trả lời dựa trên file data.csv
-    bot_response = None
-    for q, a in qa_data.items():
-        if q in user_text_lower:  # Kiểm tra nếu từ khóa bạn nhập khớp với dữ liệu
-            bot_response = a
+    # Xử lý logic tìm kiếm câu trả lời từ kho dữ liệu nội bộ
+    user_input_clean = user_prompt.strip().lower()
+    bot_reply = None
+
+    # Quét xem từ khóa người dùng có khớp với câu hỏi nào trong file không
+    for q, a in knowledge_base.items():
+        if q in user_input_clean:
+            bot_reply = a
             break
-            
-    # Nếu trong file không có câu trả lời phù hợp
-    if not bot_response:
-        bot_response = "Quy định của tôi: Tôi chưa được dạy câu này trong file `data.csv`. Hãy vào file đó bổ sung thêm nhé!"
 
-    # Lưu và hiển thị câu trả lời của AI
-    st.session_state.messages.append({"role": "assistant", "content": bot_response})
+    # Nếu không tìm thấy trong dữ liệu
+    if not bot_reply:
+        bot_reply = "Quy định xử lý: Tôi chưa được huấn luyện hoặc chưa có dữ liệu về câu hỏi này trong hệ thống. Vui lòng cập nhật thêm vào file `data.csv`."
+
+    # Lưu và hiển thị phản hồi của AI
+    st.session_state.chat_history.append({"role": "assistant", "content": bot_reply})
     with st.chat_message("assistant"):
-        st.markdown(bot_response)
-        import streamlit as st
-import csv
-import os
-
-st.set_page_config(page_title="AI Đọc Dữ Liệu Từ File", page_icon="📚")
-st.title("📚 Con AI Đọc Dữ Liệu Từ Tệp Riêng")
-st.write("Con AI này không dùng API, nó tự động tra cứu các câu trả lời từ file `data.csv` nằm bên cạnh.")
-
-# Tên file chứa dữ liệu
-DATA_FILE = "data.csv"
-
-# Hàm đọc dữ liệu từ file CSV
-def load_qa_data():
-    qa_dict = {}
-    if os.path.exists(DATA_FILE):
-        with open(DATA_FILE, mode="r", encoding="utf-8") as f:
-            reader = csv.reader(f)
-            next(reader, None)  # Bỏ qua dòng tiêu đề (cau_hoi, cau_tra_loi)
-            for row in reader:
-                if len(row) >= 2:
-                    question = row[0].strip().lower()
-                    answer = row[1].strip()
-                    qa_dict[question] = answer
-    return qa_dict
-
-# Tải dữ liệu câu hỏi/trả lời
-qa_data = load_qa_data()
-
-# Hiển thị bảng danh sách những gì AI đang biết (để bạn dễ theo dõi)
-with st.expander("📂 Xem danh sách câu hỏi/trả lời hiện có trong file `data.csv`"):
-    if qa_data:
-        for q, a in qa_data.items():
-            st.write(f"- **Hỏi:** `{q}` ➔ **Đáp:** `{a}`")
-    else:
-        st.write("File `data.csv` chưa có dữ liệu hoặc đang trống.")
-
-# Khởi tạo lịch sử trò chuyện trên giao diện
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
-# Hiển thị lịch sử chat
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
-
-# Khung nhập tin nhắn
-if user_input := st.chat_input("Nhập câu hỏi cho con AI của bạn..."):
-    # Lưu tin nhắn của bạn
-    st.session_state.messages.append({"role": "user", "content": user_input})
-    with st.chat_message("user"):
-        st.markdown(user_input)
-
-    user_text_lower = user_input.strip().lower()
-    
-    # Tìm kiếm câu trả lời dựa trên file data.csv
-    bot_response = None
-    for q, a in qa_data.items():
-        if q in user_text_lower:  # Kiểm tra nếu từ khóa bạn nhập khớp với dữ liệu
-            bot_response = a
-            break
-            
-    # Nếu trong file không có câu trả lời phù hợp
-    if not bot_response:
-        bot_response = "Quy định của tôi: Tôi chưa được dạy câu này trong file `data.csv`. Hãy vào file đó bổ sung thêm nhé!"
-
-    # Lưu và hiển thị câu trả lời của AI
-    st.session_state.messages.append({"role": "assistant", "content": bot_response})
-    with st.chat_message("assistant"):
-        st.markdown(bot_response)
-    
+        st.markdown(bot_reply)
+        
