@@ -1,39 +1,33 @@
 import streamlit as st
-import google.generativeai as genai
+from groq import Groq
 from duckduckgo_search import DDGS
 
 # Cấu hình giao diện trang web
 st.set_page_config(
-    page_title="AI Thông Minh Tự Tra Cứu",
-    page_icon="🤖",
+    page_title="AI Groq Tự Tra Cứu",
+    page_icon="⚡",
     layout="centered"
 )
 
-st.title("🤖 Chatbot Tự Động Tra Cứu Web")
-st.caption("Ứng dụng không dùng dữ liệu cố định - Tự động tìm kiếm thông tin mới nhất để trả lời bạn.")
+st.title("⚡ Chatbot Groq + Tự Động Tra Cứu Web")
+st.caption("Ứng dụng chạy bằng Groq API - Tự động tìm kiếm thông tin Internet mới nhất để trả lời.")
 
 # Lấy API Key từ Streamlit Secrets hoặc thanh nhập bên trái
 api_key = None
-if "GEMINI_API_KEY" in st.secrets:
-    api_key = st.secrets["GEMINI_API_KEY"]
+if "GROQ_API_KEY" in st.secrets:
+    api_key = st.secrets["GROQ_API_KEY"]
 else:
     with st.sidebar:
         st.subheader("Cài đặt cấu hình")
-        api_key = st.text_input("Nhập Google Gemini API Key:", type="password")
-        st.markdown("[Lấy API Key miễn phí tại đây](https://aistudio.google.com/)")
+        api_key = st.text_input("Nhập Groq API Key:", type="password")
+        st.markdown("[Lấy Groq API Key miễn phí tại đây](https://console.groq.com/)")
 
 if not api_key:
-    st.warning("⚠️ Vui lòng cấu hình `GEMINI_API_KEY` trong Streamlit Secrets hoặc nhập vào thanh cài đặt bên trái để bắt đầu.")
+    st.warning("⚠️ Vui lòng cấu hình `GROQ_API_KEY` trong Streamlit Secrets hoặc nhập vào thanh cài đặt bên trái để bắt đầu.")
     st.stop()
 
-# Cấu hình Gemini API
-genai.configure(api_key=api_key)
-
-@st.cache_resource
-def get_ai_model():
-    return genai.GenerativeModel("gemini-1.5-flash")
-
-model = get_ai_model()
+# Khởi tạo Groq Client
+client = Groq(api_key=api_key)
 
 # Hàm tìm kiếm thông tin trên web
 def search_web(query):
@@ -62,27 +56,37 @@ if prompt := st.chat_input("Bạn muốn tìm hiểu điều gì hôm nay?"):
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
-        with st.spinner("🔍 Đang tìm kiếm thông tin và phân tích..."):
+        with st.spinner("⚡ Đang tìm kiếm web và tổng hợp tốc độ cao..."):
             # 1. Tự động tìm kiếm thông tin trên web dựa vào câu hỏi
             search_data = search_web(prompt)
             
-            # 2. Tạo prompt kết hợp thông tin tìm được
+            # 2. Tạo ngữ cảnh hệ thống
             system_prompt = (
                 "Bạn là một trợ lý AI thông minh. Dưới đây là thông tin thực tế được tìm kiếm từ internet để hỗ trợ:\n"
                 f"--- \n{search_data}\n ---\n"
-                "Hãy sử dụng thông tin trên kết hợp với hiểu biết của bạn để trả lời câu hỏi của người dùng một cách chính xác, ngắn gọn, tự nhiên bằng tiếng Việt. "
-                "Nếu thông tin tìm kiếm không đủ, hãy tự suy luận logic nhưng tuyệt đối không bịa đặt thông tin sai lệch."
+                "Hãy sử dụng thông tin trên kết hợp với hiểu biết của bạn để trả lời câu hỏi của người dùng một cách chính xác, ngắn gọn, tự nhiên bằng tiếng Việt."
             )
             
-            full_input = f"{system_prompt}\n\nCâu hỏi của người dùng: {prompt}"
+            # Chuẩn bị tin nhắn gửi lên Groq API
+            messages_payload = [
+                {"role": "system", "content": system_prompt}
+            ]
+            # Thêm lịch sử trò chuyện gần đây để giữ ngữ cảnh
+            for m in st.session_state.messages[-6:]:
+                messages_payload.append({"role": m["role"], "content": m["content"]})
             
-            # 3. Gọi model sinh nội dung
+            # 3. Gọi model Groq (sử dụng Llama 3 mạnh mẽ và nhanh)
             try:
-                response = model.generate_content(full_input)
-                answer = response.text
+                chat_completion = client.chat.completions.create(
+                    model="llama-3.3-70b-versatile",
+                    messages=messages_payload,
+                    temperature=0.7,
+                    max_tokens=2048
+                )
+                answer = chat_completion.choices[0].message.content
             except Exception as e:
-                answer = f"Đã xảy ra lỗi khi kết nối với AI: {str(e)}"
+                answer = f"Đã xảy ra lỗi khi kết nối với Groq API: {str(e)}"
             
             st.markdown(answer)
             st.session_state.messages.append({"role": "assistant", "content": answer})
-  
+            
