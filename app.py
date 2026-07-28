@@ -32,7 +32,7 @@ if uploaded_file is not None:
     
     with col1:
         st.subheader("📥 Bản thảo gốc (Line Art)")
-        st.image(cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB), use_column_width=True)
+        st.image(cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB), use_container_width=True)
         
     with col2:
         st.subheader("✨ Kết quả tô màu thông minh")
@@ -68,8 +68,8 @@ if uploaded_file is not None:
                     colored_layer[:, :, c] = np.clip(blended, 0, 255).astype(np.uint8)
 
                 # Hiển thị kết quả trực quan
-                st.image(cv2.cvtColor(colored_layer, cv2.COLOR_BGR2RGB), use_column_width=True)
+                st.image(cv2.cvtColor(colored_layer, cv2.COLOR_BGR2RGB), use_container_width=True)
                 st.success("🎉 Hoàn tất quá trình tô màu thông minh siêu cấp!")
 else:
     st.info("💡 Hãy tải lên một hình ảnh truyện tranh đen trắng để bắt đầu kích hoạt mô hình AI.")
-                                    
+    
