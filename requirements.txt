@@ -1,3 +1,15 @@
-opencv-python-headless
+streamlit>=1.45.0
+torch
+torchvision
+diffusers
+transformers
+accelerate
+opencv-python
 numpy
-streamlit
+Pillow
+safetensors
+controlnet_aux
+huggingface_hub
+xformers
+scipy
+requests
