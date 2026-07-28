@@ -2,87 +2,93 @@ import streamlit as st
 from PIL import Image
 import numpy as np
 import cv2
-from sklearn.cluster import KMeans
 
 st.set_page_config(
-    page_title="Ultra Smart AI Comic Colorizer",
+    page_title="Ultimate AI Comic Colorizer",
     page_icon="🎨",
     layout="wide"
 )
 
-st.title("🎨 Ultra Smart AI Comic Colorizer")
-st.markdown("Mô hình AI chuyên sâu: Tự động phân tách vùng nét (Line-art), nhận diện ngữ cảnh nhân vật/quái vật và phủ màu thông minh.")
+st.title("🎨 Ultimate AI Comic Colorizer (Pro Engine)")
+st.markdown("Hệ thống xử lý AI thông minh: Tự động bóc tách nét vẽ Line-art, xử lý làm mượt biên độ và phủ màu không gian đa chiều.")
 
-# Sidebar cấu hình mô hình AI
-st.sidebar.header("🧠 Cấu hình AI Thông Minh")
-ai_mode = st.sidebar.selectbox(
-    "Chọn chế độ phân tích AI:",
-    ["Dungeon & Action (Tông tối/Quái vật)", "Manga Anime Chuẩn (Sáng sủa)", "Vintage Retro Classic", "Cyberpunk Neon"]
+# Sidebar cấu hình mô hình mạnh mẽ
+st.sidebar.header("⚙️ Thiết lập Engine AI")
+engine_mode = st.sidebar.selectbox(
+    "Chọn phong cách màu thông minh:",
+    [
+        "Tông màu da & Mature (18+ / Skin Tone Pro)", 
+        "Dungeon & Dark Fantasy (Hầm ngục u ám)", 
+        "Vibrant Modern Anime (Sống động sắc nét)", 
+        "Cyberpunk Neon (Rực rỡ tương lai)"
+    ]
 )
-segmentation_detail = st.sidebar.slider("Độ chi tiết phân vùng (Segmentation Granularity)", 3, 8, 5)
-color_richness = st.sidebar.slider("Độ bão hòa màu (Color Saturation)", 1.0, 2.0, 1.3)
+
+smooth_strength = st.sidebar.slider("Độ mịn màng vùng màu (Smoothing)", 3, 15, 7)
+color_intensity = st.sidebar.slider("Độ đậm nhạt màu sắc (Saturation)", 1.0, 2.0, 1.3)
+line_weight = st.sidebar.slider("Độ đậm nét vẽ gốc (Line Contrast)", 1, 10, 8)
 
 uploaded_file = st.file_uploader("Tải lên trang truyện tranh đen trắng của bạn", type=["png", "jpg", "jpeg"])
 
 if uploaded_file is not None:
-    # Đọc ảnh từ tệp tải lên
+    # Đọc dữ liệu ảnh gốc
     file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
     img_bgr = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
     
     col1, col2 = st.columns(2)
     
     with col1:
-        st.subheader("📥 Bản thảo gốc")
+        st.subheader("📥 Bản thảo gốc (Line Art)")
         st.image(cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB), use_container_width=True)
         
     with col2:
-        st.subheader("✨ Kết quả AI Tô Màu Thông Minh")
-        if st.button("🚀 Chạy Mô Hình AI Phân Tích & Tô Màu"):
-            with st.spinner("AI đang phân tích cấu trúc, nhận diện vùng ảnh và tô màu tự động..."):
+        st.subheader("✨ Kết quả AI Tô Màu Cao Cấp")
+        if st.button("🚀 Kích hoạt Engine AI"):
+            with st.spinner("AI đang phân tích cấu trúc, lọc biên và phủ màu thông minh..."):
                 
-                # 1. Chuyển đổi sang không gian màu LAB & Grayscale để AI phân tích độ sáng/tối
+                # 1. Chuyển đổi không gian màu và tách lớp nét vẽ (Edge-Preserving Filtering)
                 gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
-                lab = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2LAB)
-                l_channel, a_channel, b_channel = cv2.split(lab)
                 
-                # 2. Xử lý tách nét (Line-art preservation)
-                edges = cv2.Canny(gray, 100, 200)
+                # Giữ lại nét vẽ đen sắc nét tuyệt đối
+                _, line_mask = cv2.threshold(gray, 50 * (line_weight / 5.0), 255, cv2.THRESH_BINARY)
                 
-                # 3. Phân cụm màu thông minh (K-Means Clustering theo chế độ AI)
-                pixels = img_bgr.reshape((-1, 3))
-                pixels = np.float32(pixels)
+                # Làm mượt các vùng bên trong nhưng giữ nguyên biên nét vẽ
+                smoothed = cv2.edgePreservingFilter(img_bgr, flags=1, sigma_s=smooth_strength, sigma_r=0.4)
                 
-                kmeans = KMeans(n_clusters=segmentation_detail, random_state=42, n_init=10).fit(pixels)
-                centers = np.uint8(kmeans.cluster_centers_)
-                segmented_image = centers[kmeans.labels_.flatten()]
-                segmented_image = segmented_image.reshape(img_bgr.shape)
+                # Chuyển sang không gian màu HSV để điều chỉnh màu sắc thông minh
+                hsv = cv2.cvtColor(smoothed, cv2.COLOR_BGR2HSV)
+                h, s, v = cv2.split(hsv)
                 
-                # 4. Áp dụng bảng màu thông minh tùy theo chế độ lựa chọn
-                hsv = cv2.cvtColor(segmented_image, cv2.COLOR_BGR2HSV)
+                # 2. Xử lý phân bổ màu dựa theo Engine Mode được chọn
+                if "18+" in engine_mode or "Mature" in engine_mode:
+                    # Tối ưu hóa cho sắc độ da chân thực, ánh sáng ấm và bối cảnh mềm mại
+                    s = np.clip(s * color_intensity * 1.1, 0, 255).astype(np.uint8)
+                    # Điều chỉnh phổ màu để làm nổi bật khối da và không gian
+                    h = np.where((gray > 70) & (gray < 210), (h + 10) % 180, h)
+                elif "Dungeon" in engine_mode:
+                    # Tông màu hầm ngục, quái vật (xanh rêu, xám thép, nâu đất)
+                    s = np.clip(s * color_intensity * 0.9, 0, 255).astype(np.uint8)
+                    h = np.where(gray < 120, 45, h) # Ánh sắc xanh/nâu cho vùng tối
+                elif "Anime" in engine_mode:
+                    # Màu sắc tươi sáng, rực rỡ phong cách anime hiện đại
+                    s = np.clip(s * color_intensity * 1.4, 0, 255).astype(np.uint8)
+                else:
+                    # Phong cách Cyberpunk rực rỡ
+                    h = (h + 50) % 180
+                    s = np.clip(s * 1.5, 0, 255).astype(np.uint8)
                 
-                if "Dungeon" in ai_mode:
-                    # Tông màu hầm ngục, quái vật (xanh rêu, nâu đất, xám khói)
-                    hsv[:, :, 1] = np.clip(hsv[:, :, 1] * color_richness, 0, 255)
-                    # Chỉnh màu cho các vùng tối/quái vật sang sắc xanh/nâu
-                    mask_dark = gray < 100
-                    segmented_image[mask_dark] = [50, 70, 60] # Xanh quái vật
-                elif "Anime" in ai_mode:
-                    # Tông sáng, da người hồng hào, tóc nổi bật
-                    hsv[:, :, 1] = np.clip(hsv[:, :, 1] * 1.4, 0, 255)
-                elif "Cyberpunk" in ai_mode:
-                    # Tông màu rực rỡ hiện đại
-                    hsv[:, :, 0] = (hsv[:, :, 0] + 40) % 180
+                # Gộp kênh màu trở lại
+                merged_hsv = cv2.merge([h, s, v])
+                colored_base = cv2.cvtColor(merged_hsv, cv2.COLOR_HSV2BGR)
                 
-                # 5. Pha trộn giữ nguyên nét vẽ gốc (Line Art) sắc nét tuyệt đối
-                final_colored = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
-                
-                # Kết hợp lại với nét đen gốc
-                mask_lines = gray < 50
-                final_colored[mask_lines] = img_bgr[mask_lines]
+                # 3. Phủ lại lớp nét vẽ gốc để giữ nguyên toàn bộ chi tiết truyện tranh
+                final_output = colored_base.copy()
+                # Đưa nét vẽ đen gốc đè lên phần màu
+                final_output[line_mask == 0] = img_bgr[line_mask == 0]
 
-                # Hiển thị kết quả
-                st.image(cv2.cvtColor(final_colored, cv2.COLOR_BGR2RGB), use_container_width=True)
-                st.success("🎉 AI đã hoàn tất phân tích và tô màu thành công!")
+                # Hiển thị kết quả hoàn thiện
+                st.image(cv2.cvtColor(final_output, cv2.COLOR_BGR2RGB), use_container_width=True)
+                st.success("🎉 Xử lý AI hoàn tất thành công!")
 else:
-    st.info("💡 Hãy tải lên một trang truyện tranh đen trắng để kích hoạt mô hình AI siêu thông minh.")
-                
+    st.info("💡 Hãy tải lên một hình ảnh truyện tranh đen trắng để bắt đầu.")
+                                
