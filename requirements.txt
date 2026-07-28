@@ -1,4 +1,4 @@
 streamlit
 Pillow
 numpy
-opencv-python-headless
+huggingface_hub
