@@ -37,9 +37,9 @@ if uploaded_file is not None:
             if not hf_token:
                 st.warning("⚠️ Vui lòng nhập Hugging Face Token ở thanh bên trái để sử dụng!")
             else:
-                with st.spinner("AI đang xử lý và tô màu tự động..."):
+                with st.spinner("AI đang kết nối và xử lý (Nếu là lần đầu chạy, mô hình có thể mất 30 giây để khởi động)..."):
                     try:
-                        # Khởi tạo client miễn phí
+                        # Khởi tạo client miễn phí với token của bạn
                         client = InferenceClient(token=hf_token)
                         
                         # Chuyển đổi ảnh sang dạng bytes
@@ -47,11 +47,10 @@ if uploaded_file is not None:
                         image.save(img_byte_arr, format='PNG')
                         img_bytes = img_byte_arr.getvalue()
                         
-                        # Gọi mô hình AI chuyên dụng xử lý ảnh (Image-to-Image / Colorization)
-                        # Sử dụng mô hình xử lý hình ảnh mã nguồn mở miễn phí trên Hugging Face
+                        # Gọi mô hình AI xử lý hình ảnh
                         image_result_bytes = client.image_to_image(
                             image=img_bytes,
-                            prompt="professional comic book colorization, vibrant colors, detailed shading, high quality",
+                            prompt="professional comic book colorization, vibrant colors, detailed shading, high quality manga art",
                             model="runwayml/stable-diffusion-v1-5" 
                         )
                         
@@ -60,8 +59,9 @@ if uploaded_file is not None:
                         st.success("🎉 Hoàn tất tô màu thông minh bằng AI!")
                         
                     except Exception as e:
-                        st.error(f"Đã xảy ra lỗi: {e}")
-                        st.info("💡 Mẹo: Hãy đảm bảo Token của bạn chính xác và mô hình đang hoạt động.")
+                        # Hiển thị chi tiết lỗi thực tế để dễ kiểm tra
+                        st.error(f"Đã xảy ra lỗi chi tiết: {e}")
+                        st.info("💡 **Gợi ý khắc phục:** \n- Nếu lỗi 503 (Model is loading), hãy đợi 30 giây rồi bấm lại nút chạy.\n- Kiểm tra lại Token xem đã copy chính xác chưa và có quyền Read hay không.")
 else:
     st.info("💡 Hãy tải lên một hình ảnh truyện tranh để bắt đầu.")
     
