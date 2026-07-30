@@ -1,2 +1,7 @@
-streamlit
-groq
+streamlit>=1.28.0
+easyocr>=1.7.1
+opencv-python-headless>=4.8.0
+Pillow>=10.0.0
+numpy>=1.24.0
+groq>=0.9.0
+torch  # EasyOCR cần
