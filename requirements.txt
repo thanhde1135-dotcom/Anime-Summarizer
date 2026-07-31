@@ -1,8 +1,0 @@
-streamlit
-groq
-opencv-python-headless
-numpy
-pillow
-paddleocr
-paddlepaddle
-requests
