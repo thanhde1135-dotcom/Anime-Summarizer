@@ -1,0 +1,5 @@
+gradio
+beautifulsoup4
+requests
+pillow
+lxml
